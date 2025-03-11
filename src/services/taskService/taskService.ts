@@ -1,5 +1,8 @@
 import { taskRepository, ITaskRepository } from '@repositories';
 import * as process from "node:process";
+import { threadId } from "node:worker_threads";
+
+const workerId = threadId;
 
 type TaskStatus = (typeof TaskStatus)[keyof typeof TaskStatus];
 const TaskStatus = {
@@ -23,15 +26,24 @@ class TaskService {
                 return null;
             }
 
-            console.log(`Worker ${process.pid} took task ${task.id}`);
+            console.log(`Worker ${workerId} took task ${task.id}`);
             const response = await fetch(task.url);
             const newTask = {
-                status: response.statusText.toLowerCase() === 'ok' ? TaskStatus.DONE: TaskStatus.ERROR,
+                status: response.statusText.toLowerCase() === 'ok' ? TaskStatus.DONE : TaskStatus.ERROR,
                 http_code: response.status,
                 url: task.url,
                 id: task.id,
+                updated_time: null
             }
             return this.taskRepository.updateTask(newTask);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    async closeTimeoutTasks() {
+        try {
+            return await this.taskRepository.closeTimeoutTasks();
         } catch (error) {
             console.error(error);
         }

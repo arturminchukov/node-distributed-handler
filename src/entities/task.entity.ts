@@ -13,6 +13,9 @@ export class Task {
 
     @Column({default: null})
     http_code: number;
+
+    @Column({default: null, type: 'bigint', nullable: true})
+    updated_time: number | null;
 }
 
 
